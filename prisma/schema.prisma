@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  name              String
+  password          String
+  role              Role      @default(USER)
+  plan              Plan      @default(FREE)
+  planExpiry        DateTime?
+  createdAt         DateTime  @default(now())
+  maxConfigs        Int       @default(2)
+  currentConfigs    Int       @default(0)
+  allowedmaxgb      Int       @default(10)
+  currentgb         Int       @default(0)
+  restrictions      Json?
+  emailVerified     Boolean   @default(false)
+  verificationToken String?
+  speedLimit        Int       @default(0)
+
+  configs Config[]
+}
+
+model Config {
+  id           String    @id @default(uuid())
+  userId       String
+  xrayClientId String
+  inboundId    Int
+  name         String
+  protocol     String
+  v2rayUrl     String
+  enabled      Boolean   @default(true)
+  expiryDate   DateTime?
+  port         Int       @default(0)
+  security     String    @default("none")
+  network      String    @default("tcp")
+  sni          String?
+  fingerprint  String?
+  clientEmail  String?
+  createdAt    DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PremadeConfig {
+  id           String   @id @default(uuid())
+  name         String
+  description  String?
+  protocol     String   @default("vless")
+  port         Int      @default(0)
+  security     String   @default("reality")
+  network      String   @default("tcp")
+  sni          String?
+  fingerprint  String?  @default("chrome")
+  dataGB       Int      @default(10)
+  durationDays Int      @default(30)
+  paidOnly     Boolean  @default(false)
+  promotional  Boolean  @default(false)
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model Notice {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   @default("info") // info, warning, success, danger
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model AdminSettings {
+  id                  String  @id @default("global")
+  defaultMaxConfigs   Int     @default(2)
+  defaultMaxGB        Int     @default(10)
+  defaultSpeedLimit   Int     @default(0)
+  defaultRestrictions Json?
+  showLiveUsers       Boolean @default(true)
+  disabledPlans       Json?
+  backupPanelUrl      String?
+  backupPanelUser     String?
+  backupPanelPass     String?
+  plans               Json?
+  landingPlans        Json?
+}

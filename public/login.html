@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — NextBit VPN</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">⚡ NextBit VPN</a>
+        <div class="navbar-links">
+            <a href="/">Home</a>
+            <a href="/signup" class="btn btn-primary btn-sm">Sign Up</a>
+        </div>
+    </nav>
+
+    <div class="auth-page">
+        <div class="card auth-card">
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Sign in to access your VPN dashboard</p>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary"
+                    style="width: 100%; justify-content: center; margin-top: 0.5rem;" id="login-btn">
+                    Sign In
+                </button>
+            </form>
+
+            <div id="verify-prompt"
+                style="display:none; margin-top: 1rem; padding: 1rem; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 10px;">
+                <p style="color: #fbbf24; font-size: 0.9rem; margin: 0 0 0.5rem;">📧 Please verify your email first.</p>
+                <button class="btn btn-secondary btn-sm" id="resend-btn" onclick="resendVerification()">Resend
+                    Verification Email</button>
+            </div>
+
+            <p class="auth-footer">Don't have an account? <a href="/signup">Sign up</a></p>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        let unverifiedEmail = null;
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('login-btn');
+            btn.textContent = 'Signing in...';
+            btn.disabled = true;
+
+            try {
+                const data = await api.post('/auth/signin', {
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value,
+                });
+
+                showToast('Login successful!');
+                setTimeout(() => window.location.href = '/dashboard', 500);
+            } catch (err) {
+                if (err.message.includes('verify')) {
+                    unverifiedEmail = document.getElementById('email').value;
+                    document.getElementById('verify-prompt').style.display = 'block';
+                }
+                showToast(err.message, 'error');
+                btn.textContent = 'Sign In';
+                btn.disabled = false;
+            }
+        });
+
+        async function resendVerification() {
+            const btn = document.getElementById('resend-btn');
+            btn.textContent = 'Sending...';
+            btn.disabled = true;
+            try {
+                await api.post('/auth/resend-verification', { email: unverifiedEmail || document.getElementById('email').value });
+                showToast('Verification email sent! Check your inbox.');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+            btn.textContent = 'Resend Verification Email';
+            btn.disabled = false;
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up — NextBit VPN</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">⚡ NextBit VPN</a>
+        <div class="navbar-links">
+            <a href="/">Home</a>
+            <a href="/login" class="btn btn-secondary btn-sm">Login</a>
+        </div>
+    </nav>
+
+    <div class="auth-page">
+        <div class="card auth-card">
+            <h1 class="auth-title">Create Account</h1>
+            <p class="auth-subtitle">Get started with your premium VPN service</p>
+
+            <form id="signup-form">
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-input" id="name" placeholder="Your name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="password" placeholder="••••••••" minlength="6"
+                        required>
+                </div>
+                <button type="submit" class="btn btn-primary"
+                    style="width: 100%; justify-content: center; margin-top: 0.5rem;" id="signup-btn">
+                    Create Account
+                </button>
+            </form>
+
+            <div id="success-msg"
+                style="display:none; margin-top: 1rem; padding: 1.2rem; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; text-align: center;">
+                <p style="color: #22c55e; font-size: 1rem; margin: 0 0 0.5rem;">✅ Account created!</p>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Check your email for a
+                    verification link, then <a href="/login" style="color: var(--accent-light);">log in</a>.</p>
+            </div>
+
+            <p class="auth-footer">Already have an account? <a href="/login">Sign in</a></p>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('signup-btn');
+            btn.textContent = 'Creating account...';
+            btn.disabled = true;
+
+            try {
+                await api.post('/auth/signup', {
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value,
+                });
+
+                document.getElementById('signup-form').style.display = 'none';
+                document.getElementById('success-msg').style.display = 'block';
+                showToast('Account created! Check your email.');
+            } catch (err) {
+                showToast(err.message, 'error');
+                btn.textContent = 'Create Account';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

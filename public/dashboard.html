@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — NextBit VPN</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="navbar-container"></div>
+
+    <main class="dashboard-main">
+        <!-- Stats -->
+        <div class="stat-grid" id="stat-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="s-configs">—</div>
+                <div class="stat-label">Configs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="s-online"><span class="live-dot"></span> —</div>
+                <div class="stat-label">Online</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="s-usage">—</div>
+                <div class="stat-label">Data Used</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="s-limit">—</div>
+                <div class="stat-label">Data Limit</div>
+            </div>
+        </div>
+
+        <div class="usage-bar-container">
+            <div class="usage-bar" id="usage-bar" style="width: 0%;"></div>
+        </div>
+
+        <!-- Premade Configs Section -->
+        <div class="section-header" style="margin-top: 2rem;">
+            <h2>📦 Ready-Made Configs</h2>
+            <p class="text-secondary">One-click setup — just activate and connect</p>
+        </div>
+        <div class="premade-grid" id="premade-grid">
+            <div class="loading-state">Loading premade configs...</div>
+        </div>
+
+        <!-- My Configs Section -->
+        <div class="section-header" style="margin-top: 2rem;">
+            <h2>My Configs</h2>
+            <button class="btn btn-primary" onclick="openWizard()">+ New Config</button>
+        </div>
+
+        <div id="panel-warning"
+            style="display:none; padding: 1rem; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 10px; margin-bottom: 1rem;">
+            <p style="color: #fbbf24; margin: 0; font-size: 0.85rem;">⚠️ VPN panel is temporarily unreachable. Showing
+                cached data.</p>
+        </div>
+
+        <div class="config-grid" id="config-grid">
+            <div class="loading-state">Loading your configs...</div>
+        </div>
+    </main>
+
+    <!-- Wizard Modal -->
+    <div class="modal" id="wizard-modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>New Config</h3>
+                <button class="modal-close" onclick="closeModal('wizard-modal')">&times;</button>
+            </div>
+            <div class="wizard-steps">
+                <div class="wizard-step active" data-step="1"><span>1</span> Protocol</div>
+                <div class="wizard-step" data-step="2"><span>2</span> Settings</div>
+                <div class="wizard-step" data-step="3"><span>3</span> Security</div>
+            </div>
+            <!-- Step 1 -->
+            <div class="wizard-panel active" id="step-1">
+                <label class="form-label">CONFIG NAME</label>
+                <input type="text" class="form-input" id="w-name" placeholder="My VPN Config" required>
+                <label class="form-label" style="margin-top:1rem;">PROTOCOL</label>
+                <div class="protocol-tabs" id="protocol-tabs">
+                    <button class="tab-btn active" data-val="vless">VLESS</button>
+                    <button class="tab-btn" data-val="vmess">VMess</button>
+                    <button class="tab-btn" data-val="trojan">Trojan</button>
+                </div>
+                <button class="btn btn-primary" style="width:100%;margin-top:1.5rem;justify-content:center;"
+                    onclick="wizardNext(2)">Next →</button>
+            </div>
+            <!-- Step 2 -->
+            <div class="wizard-panel" id="step-2">
+                <label class="form-label">PORT (0 = random)</label>
+                <input type="number" class="form-input" id="w-port" value="0" min="0" max="65535">
+                <label class="form-label" style="margin-top:1rem;">NETWORK</label>
+                <div class="protocol-tabs" id="network-tabs">
+                    <button class="tab-btn active" data-val="tcp">TCP</button>
+                    <button class="tab-btn" data-val="ws">WebSocket</button>
+                    <button class="tab-btn" data-val="grpc">gRPC</button>
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-top:1.5rem;">
+                    <button class="btn btn-secondary" style="flex:1;justify-content:center;" onclick="wizardNext(1)">←
+                        Back</button>
+                    <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="wizardNext(3)">Next
+                        →</button>
+                </div>
+            </div>
+            <!-- Step 3 -->
+            <div class="wizard-panel" id="step-3">
+                <label class="form-label">SECURITY</label>
+                <div class="protocol-tabs" id="security-tabs">
+                    <button class="tab-btn active" data-val="none">None</button>
+                    <button class="tab-btn" data-val="reality">Reality</button>
+                    <button class="tab-btn" data-val="tls">TLS</button>
+                </div>
+                <label class="form-label" style="margin-top:1rem;">SNI (SERVER NAME)</label>
+                <input type="text" class="form-input" id="w-sni" placeholder="microsoft365.com">
+                <label class="form-label" style="margin-top:1rem;">FINGERPRINT</label>
+                <div class="protocol-tabs" id="fp-tabs">
+                    <button class="tab-btn active" data-val="chrome">Chrome</button>
+                    <button class="tab-btn" data-val="firefox">Firefox</button>
+                    <button class="tab-btn" data-val="safari">Safari</button>
+                    <button class="tab-btn" data-val="random">Random</button>
+                </div>
+                <div style="display:flex;gap:0.5rem;margin-top:1.5rem;">
+                    <button class="btn btn-secondary" style="flex:1;justify-content:center;" onclick="wizardNext(2)">←
+                        Back</button>
+                    <button class="btn btn-primary" style="flex:1;justify-content:center;" id="create-btn"
+                        onclick="createConfig()">⚡ Create Config</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="delete-modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border: none; padding-bottom: 0;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">🗑️</div>
+            </div>
+            <h3 style="margin-bottom: 0.5rem;">Delete Config?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Are you sure you want to delete <b
+                    id="del-config-name">this config</b>? This action cannot be undone.</p>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-secondary" style="flex:1;justify-content:center;"
+                    onclick="closeModal('delete-modal')">Cancel</button>
+                <button class="btn btn-danger" style="flex:1;justify-content:center;"
+                    id="confirm-delete-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activate Premade Modal -->
+    <div class="modal" id="activate-premade-modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border: none; padding-bottom: 0;">
+                <div style="font-size: 3rem; margin-bottom: 0.5rem;">⚡</div>
+            </div>
+            <h3 style="margin-bottom: 0.5rem;">Activate Config?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Activate <b id="premade-config-name">this config</b>?</p>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-secondary" style="flex:1;justify-content:center;"
+                    onclick="closeModal('activate-premade-modal')">Cancel</button>
+                <button class="btn btn-primary" style="flex:1;justify-content:center;"
+                    id="confirm-activate-btn">Activate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="edit-modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>Edit Config</h3>
+                <button class="modal-close" onclick="closeModal('edit-modal')">&times;</button>
+            </div>
+            <div style="padding: 1rem;">
+                <label class="form-label">CONFIG NAME</label>
+                <input type="text" class="form-input" id="edit-name" required>
+
+                <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="regen-uuid" style="width:auto;">
+                    <label for="regen-uuid" style="color:var(--text-primary);">Regenerate UUID (Key)?</label>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Checking this will
+                    break your existing connection until you update the client with the new URL.</p>
+
+                <button class="btn btn-primary" style="width:100%; margin-top: 1.5rem; justify-content: center;"
+                    id="save-edit-btn" onclick="saveConfigEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="success-modal">
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">🎉</div>
+            <h3>Config Created!</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">Copy the URL below and paste it into your
+                V2Ray client.</p>
+            <div class="success-url-box" id="success-url"
+                style="background: var(--surface-2); padding: 1rem; border-radius: 10px; word-break: break-all; font-family: monospace; font-size: 0.8rem; color: var(--text-primary); margin-bottom: 1rem; text-align: left; max-height: 120px; overflow-y: auto;">
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-primary" style="flex:1;justify-content:center;"
+                    onclick="copyToClipboard(document.getElementById('success-url').textContent)">📋 Copy URL</button>
+                <button class="btn btn-secondary" style="flex:1;justify-content:center;"
+                    onclick="closeModal('success-modal'); loadConfigs();">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notice Popup Modal -->
+    <div class="modal" id="notice-modal">
+        <div class="modal-content" style="max-width:520px;">
+            <div class="modal-header">
+                <h3>📢 System Notices</h3>
+                <button class="modal-close" onclick="closeModal('notice-modal')">&times;</button>
+            </div>
+            <div id="notice-modal-body"></div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:1rem;"
+                onclick="closeModal('notice-modal')">Got it</button>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        let currentUser = null;
+
+        async function init() {
+            try {
+                const data = await api.get('/config/list');
+                if (!data) return;
+
+                currentUser = { maxConfigs: data.summary.maxConfigs, allowedmaxgb: data.summary.allowedMaxGB };
+                document.getElementById('navbar-container').innerHTML = getAuthNavbarHTML({ name: 'User', role: 'USER' });
+
+                renderStats(data.summary);
+                renderConfigs(data.configs);
+                if (data.panelOffline) document.getElementById('panel-warning').style.display = 'block';
+            } catch (e) {
+                showToast('Failed to load dashboard', 'error');
+            }
+
+            loadPremades();
+            checkNotices();
+        }
+
+        async function checkNotices() {
+            try {
+                const data = await fetch('/api/notices/active').then(r => r.json());
+                const notices = data.notices || [];
+                
+                // Get seen notices from localStorage
+                const seenNotices = JSON.parse(localStorage.getItem('seenNotices') || '[]');
+                
+                // Filter to only unseen notices
+                const unseenNotices = notices.filter(n => !seenNotices.includes(n.id));
+                
+                if (!unseenNotices.length) return;
+                
+                // Mark these notices as seen
+                const newSeenIds = [...seenNotices, ...unseenNotices.map(n => n.id)];
+                localStorage.setItem('seenNotices', JSON.stringify(newSeenIds));
+                
+                const body = document.getElementById('notice-modal-body');
+                body.innerHTML = unseenNotices.map(n => `
+                    <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:0.75rem;">
+                        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+                            <span style="font-size:0.7rem;padding:0.15rem 0.45rem;border-radius:999px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;${n.type === 'warning' ? 'background:rgba(245,158,11,0.15);color:#f59e0b' : n.type === 'danger' ? 'background:rgba(239,68,68,0.15);color:#ef4444' : n.type === 'success' ? 'background:rgba(34,197,94,0.15);color:#22c55e' : 'background:rgba(99,102,241,0.15);color:#818cf8'
+                    }">${n.type}</span>
+                        </div>
+                        <strong>${n.title}</strong>
+                        <p style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.25rem;">${n.message}</p>
+                    </div>
+                `).join('');
+                openModal('notice-modal');
+            } catch (e) { /* silent */ }
+        }
+
+        function renderStats(s) {
+            document.getElementById('s-configs').textContent = `${s.totalConfigs} / ${s.maxConfigs}`;
+            document.getElementById('s-online').innerHTML = `<span class="live-dot"></span> ${s.onlineCount}`;
+            document.getElementById('s-usage').textContent = `${s.totalUsageGB} GB`;
+            document.getElementById('s-limit').textContent = `${s.allowedMaxGB} GB`;
+            const pct = s.allowedMaxGB > 0 ? Math.min((parseFloat(s.totalUsageGB) / s.allowedMaxGB) * 100, 100) : 0;
+            const bar = document.getElementById('usage-bar');
+            bar.style.width = pct + '%';
+            bar.className = 'usage-bar' + (pct > 80 ? ' danger' : pct > 50 ? ' warning' : '');
+        }
+
+        // Auto-refresh logic
+        let autoRefreshInterval = null;
+        let lastConfigs = {}; // Store last traffic data to calculate speed
+
+        function startAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            autoRefreshInterval = setInterval(loadConfigs, 2000);
+        }
+
+        async function loadConfigs() {
+            try {
+                const data = await api.get('/config/list');
+                if (data) {
+                    renderStats(data.summary);
+                    renderConfigs(data.configs);
+                }
+            } catch (e) {
+                console.error("Auto-refresh failed", e);
+            }
+        }
+
+        function renderConfigs(configs) {
+            const grid = document.getElementById('config-grid');
+            if (!configs.length) {
+                grid.innerHTML = `<div class="empty-state"><div style="font-size:3rem;margin-bottom:1rem;">🔌</div><h3>No configs yet</h3><p>Create your first config or activate a premade one below.</p></div>`;
+                return;
+            }
+
+            // Render configs
+            const newHtml = configs.map(c => `
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <div>
+                            <div class="config-name">${c.name}</div>
+                            <div class="config-meta">${c.protocol.toUpperCase()} • ${c.security} • Port ${c.port}</div>
+                        </div>
+                        <span class="status-badge ${c.isOnline ? 'online' : (c.enabled ? 'offline' : 'disabled')}">${c.isOnline ? '● Online' : (c.enabled ? '○ Offline' : '⊘ Disabled')}</span>
+                    </div>
+                    <div class="config-stats">
+                        <div>
+                            <span class="stat-sm-label">↑ Upload</span>
+                            <div>${formatBytes(c.traffic.up)}</div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.2rem;">${c.speed?.up > 0 ? '⚡ ' + formatBytes(c.speed.up) + '/s' : '0 B/s'}</div>
+                        </div>
+                        <div>
+                            <span class="stat-sm-label">↓ Download</span>
+                            <div>${formatBytes(c.traffic.down)}</div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:0.2rem;">${c.speed?.down > 0 ? '⚡ ' + formatBytes(c.speed.down) + '/s' : '0 B/s'}</div>
+                        </div>
+                        <div>
+                            <span class="stat-sm-label">Total</span>
+                            <div>${c.totalUsageGB} GB</div>
+                        </div>
+                    </div>
+                    ${c.connectedIps.length ? `<div class="ip-list" style="margin-top:1rem; padding-top:0.5rem; border-top:1px solid var(--surface-2);"><div style="font-size:0.7rem; color:var(--text-secondary); margin-bottom:0.25rem;">CONNECTED DEVICES</div>${c.connectedIps.map(ip => `<span class="ip-tag">${ip}</span>`).join('')}</div>` : ''}
+                    <div class="config-actions">
+                        <button class="btn btn-sm btn-primary" onclick="copyToClipboard('${c.v2rayUrl.replace(/'/g, "\\'")}')">📋 Copy</button>
+                        <button class="btn btn-sm btn-secondary" onclick="openEditModal('${c.id}', '${c.name.replace(/'/g, "\\'")}')">✏️ Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteConfig('${c.id}', '${c.name.replace(/'/g, "\\'")}')">🗑️</button>
+                        <span class="config-expiry" style="margin-left:auto;">${formatDate(c.expiryDate)}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Only update DOM if content changed to avoid losing scroll position/selection if possible
+            // But for now simple replacement is fine as we are refreshing whole grid
+            grid.innerHTML = newHtml;
+        }
+
+        // Initialize auto-refresh
+        startAutoRefresh();
+
+        // Config Management
+        let configToDeleteId = null;
+
+        function deleteConfig(id, name) {
+            configToDeleteId = id;
+            document.getElementById('del-config-name').textContent = name;
+            openModal('delete-modal');
+        }
+
+        document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+            if (!configToDeleteId) return;
+            const btn = document.getElementById('confirm-delete-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Deleting...';
+            btn.disabled = true;
+
+            try {
+                await api.delete(`/config/${configToDeleteId}`);
+                closeModal('delete-modal');
+                showToast('Config deleted successfully');
+                loadConfigs();
+            } catch (e) {
+                showToast(e.message, 'error');
+                closeModal('delete-modal');
+            }
+            btn.textContent = originalText;
+            btn.disabled = false;
+            configToDeleteId = null;
+        });
+
+        let editingConfigId = null;
+        function openEditModal(id, name) {
+            editingConfigId = id;
+            document.getElementById('edit-name').value = name;
+            document.getElementById('regen-uuid').checked = false;
+            openModal('edit-modal');
+        }
+
+        async function saveConfigEdit() {
+            if (!editingConfigId) return;
+            const btn = document.getElementById('save-edit-btn');
+            btn.textContent = 'Saving...';
+            btn.disabled = true;
+
+            try {
+                const name = document.getElementById('edit-name').value;
+                const regen = document.getElementById('regen-uuid').checked;
+
+                const data = await api.put(`/config/${editingConfigId}`, { name, regenerateId: regen });
+                showToast('Config updated successfully');
+                closeModal('edit-modal');
+                loadConfigs();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+            btn.textContent = 'Save Changes';
+            btn.disabled = false;
+        }
+
+        function openWizard() {
+            // Reset to step 1
+            document.querySelectorAll('.wizard-step').forEach((s, i) => s.classList.toggle('active', i === 0));
+            document.querySelectorAll('.wizard-panel').forEach((p, i) => p.classList.toggle('active', i === 0));
+
+            // Clear inputs
+            document.getElementById('w-name').value = '';
+            document.getElementById('w-port').value = '0';
+            document.getElementById('w-sni').value = '';
+
+            // Reset tabs to defaults
+            document.querySelectorAll('.protocol-tabs .tab-btn').forEach(b => {
+                b.classList.remove('active');
+                if (['vless', 'tcp', 'none', 'chrome'].includes(b.dataset.val)) b.classList.add('active');
+            });
+
+            openModal('wizard-modal');
+        }
+
+
+
+        // Premade configs
+        async function loadPremades() {
+            try {
+                const data = await api.get('/premade/list');
+                const grid = document.getElementById('premade-grid');
+                if (!data.premades.length) {
+                    grid.innerHTML = `<div class="empty-state" style="padding:1.5rem;"><p style="color:var(--text-secondary);">No premade configs available yet.</p></div>`;
+                    return;
+                }
+                grid.innerHTML = data.premades.map(p => `
+                <div class="premade-card ${p.paidOnly ? 'premium' : ''}">
+                    ${p.paidOnly ? '<div class="premade-badge">PRO</div>' : '<div class="premade-badge free">FREE</div>'}
+                        <h4>${p.name}</h4>
+                        <p class="premade-desc">${p.description || ''}</p>
+                        <div class="premade-specs">
+                            <span>${p.protocol.toUpperCase()}</span>
+                            <span>${p.security}</span>
+                            <span>${p.dataGB} GB</span>
+                            <span>${p.durationDays}d</span>
+                        </div>
+                        <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center;margin-top:0.75rem;" onclick="activatePremade('${p.id}', '${p.name.replace(/'/g, "\\'")}')">⚡ Activate</button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('premade-grid').innerHTML = '<p class="text-secondary">Could not load premade configs.</p>';
+            }
+        }
+
+        // Premade Config Management
+        let premadeToActivateId = null;
+
+        function openActivatePremadeModal(id, name) {
+            premadeToActivateId = id;
+            document.getElementById('premade-config-name').textContent = name;
+            openModal('activate-premade-modal');
+        }
+
+        document.getElementById('confirm-activate-btn').addEventListener('click', async () => {
+            if (!premadeToActivateId) return;
+            const btn = document.getElementById('confirm-activate-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Activating...';
+            btn.disabled = true;
+
+            try {
+                const data = await api.post(`/premade/${premadeToActivateId}/activate`);
+                const msg = data.premade.promotional
+                    ? `🎁 Promotional config "${data.premade.name}" activated! No data deducted.`
+                    : `Config "${data.premade.name}" activated! ${data.premade.dataGB}GB deducted.`;
+                showToast(msg);
+                closeModal('activate-premade-modal');
+                document.getElementById('success-url').textContent = data.config.v2rayUrl;
+                openModal('success-modal');
+                loadConfigs();
+                loadPremades();
+            } catch (e) {
+                showToast(e.message, 'error');
+                closeModal('activate-premade-modal');
+            }
+            btn.textContent = originalText;
+            btn.disabled = false;
+        });
+
+        async function activatePremade(id, name) {
+            openActivatePremadeModal(id, name);
+        }
+
+        // Wizard
+        function wizardNext(step) {
+            document.querySelectorAll('.wizard-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step-${step}`).classList.add('active');
+            document.querySelector(`.wizard-step[data-step="${step}"]`).classList.add('active');
+        }
+
+        // Tab selection
+        document.querySelectorAll('.protocol-tabs').forEach(group => {
+            group.addEventListener('click', e => {
+                if (!e.target.classList.contains('tab-btn') || e.target.disabled) return;
+                group.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+            });
+        });
+
+        function getTabValue(id) {
+            return document.querySelector(`#${id} .tab-btn.active`)?.dataset.val || '';
+        }
+
+        async function createConfig() {
+            const btn = document.getElementById('create-btn');
+            btn.textContent = 'Creating...';
+            btn.disabled = true;
+
+            try {
+                const data = await api.post('/config/create', {
+                    name: document.getElementById('w-name').value,
+                    protocol: getTabValue('protocol-tabs'),
+                    port: parseInt(document.getElementById('w-port').value) || 0,
+                    network: getTabValue('network-tabs'),
+                    security: getTabValue('security-tabs'),
+                    sni: document.getElementById('w-sni').value || undefined,
+                    fingerprint: getTabValue('fp-tabs'),
+                });
+
+                closeModal('wizard-modal');
+                document.getElementById('success-url').textContent = data.config.v2rayUrl;
+                openModal('success-modal');
+                loadConfigs();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+
+            btn.textContent = '⚡ Create Config';
+            btn.disabled = false;
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextBit VPN — Ultra Fast V2Ray VPN Service</title>
+    <meta name="description"
+        content="NextBit VPN offers blazing fast V2Ray connections with Reality, TLS, and multi-protocol support. Get started for free.">
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">⚡ NextBit VPN</a>
+        <div class="navbar-links">
+            <a href="#features">Features</a>
+            <a href="#pricing">Pricing</a>
+            <a href="/login" class="btn btn-secondary btn-sm">Login</a>
+            <a href="/signup" class="btn btn-primary btn-sm">Sign Up</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-bg-effects">
+            <div class="hero-orb hero-orb-1"></div>
+            <div class="hero-orb hero-orb-2"></div>
+            <div class="hero-orb hero-orb-3"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">🔒 Military-Grade Encryption</div>
+            <h1 class="hero-title">
+                Blazing Fast<br>
+                <span class="gradient-text">V2Ray VPN</span>
+            </h1>
+            <p class="hero-subtitle">
+                Connect with ultra-low latency using VLESS, VMess & Trojan protocols.
+                Reality security, 10Gbps servers, zero logs.
+            </p>
+            <div class="hero-cta">
+                <a href="/signup" class="btn btn-primary btn-lg">Get Started Free</a>
+                <a href="#pricing" class="btn btn-glass btn-lg">View Plans</a>
+            </div>
+            <div class="hero-stats" id="hero-stats">
+                <div class="hero-stat">
+                    <div class="hero-stat-value" id="stat-users">—</div>
+                    <div class="hero-stat-label">Total Users</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value" id="stat-online">
+                        <span class="live-dot"></span> —
+                    </div>
+                    <div class="hero-stat-label">Online Now</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">10Gbps</div>
+                    <div class="hero-stat-label">Server Speed</div>
+                </div>
+                <div class="hero-stat">
+                    <div class="hero-stat-value">0</div>
+                    <div class="hero-stat-label">Logs Kept</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section" id="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose <span class="gradient-text">NextBit</span>?</h2>
+            <p class="section-subtitle">Enterprise-grade VPN infrastructure, simplified</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3>Ultra Fast Speeds</h3>
+                    <p>10Gbps servers with optimized routing. No throttling, no buffering.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Reality Security</h3>
+                    <p>Latest XTLS Reality protocol defeats deep packet inspection.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Real-Time Stats</h3>
+                    <p>Monitor connected IPs, upload/download speeds, and data usage live.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>Full Control</h3>
+                    <p>Custom ports, SNI, network type, and fingerprint selection.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>All Platforms</h3>
+                    <p>V2RayNG, Nekoray, Clash, Shadowrocket — all major clients supported.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔗</div>
+                    <h3>3 Protocols</h3>
+                    <p>VLESS, VMess, and Trojan — pick the best for your needs.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Auto Failover</h3>
+                    <p>Backup panel support keeps your VPN online even if a server goes down.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💎</div>
+                    <h3>Premium Dashboard</h3>
+                    <p>Beautiful dashboard with config wizard, instant URL copy, and usage analytics.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📦</div>
+                    <h3>Ready-Made Configs</h3>
+                    <p>One-click premade configs — just activate and connect instantly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="section section-dark" id="pricing">
+        <div class="container">
+            <h2 class="section-title">Simple <span class="gradient-text">Pricing</span></h2>
+            <p class="section-subtitle">Choose a plan that works for you
+                <span id="lkr-rate"
+                    style="display:block;font-size:0.8rem;margin-top:0.3rem;color:var(--text-muted);">Loading exchange
+                    rate...</span>
+            </p>
+            <div class="pricing-grid" id="pricing-grid">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 NextBit VPN (nextbit.online). All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+    <script>
+        let plans = [];
+        let lkrRate = 325;
+
+        async function loadPricing() {
+            // Fetch dynamic landing plans from backend
+            try {
+                const planRes = await fetch('/settings/landing-plans');
+                const planData = await planRes.json();
+                plans = planData.plans || [];
+            } catch (e) {
+                // Fallback defaults
+                plans = [
+                    { id: 'FREE', name: 'Starter', price: 0, period: 'forever', popular: false, features: ['2 VPN Configs', '10 GB Data', '30 Days Duration', 'VLESS Protocol'], cta: 'Get Started', ctaClass: 'btn-secondary', link: '/signup' },
+                    { id: 'PRO', name: 'Pro', price: 5, period: 'month', popular: true, features: ['5 VPN Configs', '100 GB Data', '60 Days Duration', 'All Protocols'], cta: 'Start Pro', ctaClass: 'btn-primary', link: '/signup' },
+                ];
+            }
+
+            try {
+                const rateRes = await fetch('/settings/exchange-rate');
+                const rateData = await rateRes.json();
+                lkrRate = rateData.lkr;
+                document.getElementById('lkr-rate').textContent = `1 USD = ${lkrRate.toFixed(0)} LKR (live rate)`;
+            } catch (e) {
+                document.getElementById('lkr-rate').textContent = `1 USD ≈ ${lkrRate} LKR (estimated)`;
+            }
+
+            let disabled = [];
+            try {
+                const dpRes = await fetch('/settings/disabled-plans');
+                const dpData = await dpRes.json();
+                disabled = dpData.disabledPlans || [];
+            } catch (e) { }
+
+            const grid = document.getElementById('pricing-grid');
+            grid.innerHTML = plans
+                .filter(p => !disabled.includes(p.id))
+                .map(p => {
+                    const lkrPrice = p.price > 0 ? Math.round(p.price * lkrRate) : 0;
+                    const priceDisplay = p.price === 0
+                        ? `<div class="pricing-price">Free<span>/ ${p.period}</span></div>`
+                        : `<div class="pricing-price">$${p.price}<span>/ ${p.period}</span></div>
+                           <div style="font-size:0.95rem;color:var(--accent-light);margin-top:0.2rem;font-weight:600;">LKR ${lkrPrice.toLocaleString()}<span style="font-size:0.8rem;color:var(--text-secondary);">/ ${p.period}</span></div>`;
+                    return `
+                    <div class="pricing-card ${p.popular ? 'popular' : ''}">
+                        ${p.popular ? '<div class="pricing-badge">MOST POPULAR</div>' : ''}
+                        <div class="pricing-header">
+                            <h3>${p.name}</h3>
+                            ${priceDisplay}
+                        </div>
+                        <ul class="pricing-features">${(p.features || []).map(f => `<li>✓ ${f}</li>`).join('')}</ul>
+                        <a href="${p.link || '/signup'}" class="btn ${p.ctaClass || 'btn-secondary'}" style="width:100%;justify-content:center;">${p.cta || 'Get Started'}</a>
+                    </div>`;
+                }).join('');
+        }
+
+        async function loadPublicStats() {
+            try {
+                const res = await fetch('/api/stats/public');
+                const data = await res.json();
+                if (data.hidden) { document.getElementById('hero-stats').style.display = 'none'; return; }
+                document.getElementById('stat-users').textContent = data.totalUsers.toLocaleString();
+                document.getElementById('stat-online').innerHTML = `<span class="live-dot"></span> ${data.onlineUsers}`;
+            } catch (e) { }
+        }
+
+        loadPublicStats();
+        loadPricing();
+        setInterval(loadPublicStats, 30000);
+    </script>
+</body>
+
+</html>

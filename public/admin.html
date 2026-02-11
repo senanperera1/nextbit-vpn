@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — NextBit VPN</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Drawer styles */
+        .drawer-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 400;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px)
+        }
+
+        .drawer-overlay.active {
+            display: block;
+            animation: fadeIn .2s ease
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: -600px;
+            width: 600px;
+            max-width: 100vw;
+            height: 100vh;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            z-index: 401;
+            overflow-y: auto;
+            transition: right .3s cubic-bezier(.4, 0, .2, 1);
+            padding: 1.5rem
+        }
+
+        .drawer.active {
+            right: 0
+        }
+
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .drawer-header h3 {
+            font-size: 1.15rem
+        }
+
+        .drawer-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer
+        }
+
+        .user-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .75rem;
+            margin-bottom: 1.5rem
+        }
+
+        .info-item {
+            background: var(--surface-1);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: .75rem
+        }
+
+        .info-item .info-label {
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--text-muted);
+            margin-bottom: .25rem
+        }
+
+        .info-item .info-value {
+            font-size: .95rem;
+            font-weight: 600
+        }
+
+        .drawer-config-card {
+            background: var(--surface-1);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            margin-bottom: .75rem
+        }
+
+        .drawer-config-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: .5rem
+        }
+
+        .drawer-config-name {
+            font-weight: 700;
+            font-size: .95rem
+        }
+
+        .drawer-config-meta {
+            font-size: .78rem;
+            color: var(--text-secondary)
+        }
+
+        .drawer-config-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: .85rem;
+            margin: .5rem 0
+        }
+
+        .drawer-config-actions {
+            display: flex;
+            gap: .4rem;
+            flex-wrap: wrap;
+            padding-top: .5rem;
+            border-top: 1px solid var(--border)
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        /* Notice cards */
+        .notice-card {
+            background: var(--surface-1);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            margin-bottom: .75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem
+        }
+
+        .notice-card .notice-body {
+            flex: 1
+        }
+
+        .notice-card .notice-type {
+            font-size: .7rem;
+            padding: .15rem .45rem;
+            border-radius: 999px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .5px
+        }
+
+        .notice-type-info {
+            background: rgba(99, 102, 241, .15);
+            color: #818cf8
+        }
+
+        .notice-type-warning {
+            background: rgba(245, 158, 11, .15);
+            color: #f59e0b
+        }
+
+        .notice-type-success {
+            background: rgba(34, 197, 94, .15);
+            color: #22c55e
+        }
+
+        .notice-type-danger {
+            background: rgba(239, 68, 68, .15);
+            color: #ef4444
+        }
+
+        /* Landing plan card editor */
+        .lp-card {
+            background: var(--surface-1);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            position: relative
+        }
+
+        .lp-remove {
+            position: absolute;
+            top: .75rem;
+            right: .75rem;
+            background: rgba(239, 68, 68, .1);
+            border: 1px solid rgba(239, 68, 68, .3);
+            color: var(--danger);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: .9rem
+        }
+
+        .lp-remove:hover {
+            background: rgba(239, 68, 68, .25)
+        }
+
+        /* Inline edit */
+        .inline-edit {
+            display: flex;
+            align-items: center;
+            gap: .5rem
+        }
+
+        .inline-edit input {
+            width: 80px
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/dashboard" class="navbar-brand">⚡ NextBit VPN</a>
+        <div class="navbar-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/admin-panel" style="color: var(--accent-light);">Admin</a>
+            <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <button class="sidebar-btn active" onclick="switchTab('users',this)">👥 Users</button>
+            <button class="sidebar-btn" onclick="switchTab('premade',this)">📦 Premade</button>
+            <button class="sidebar-btn" onclick="switchTab('plans',this)">💳 Plans</button>
+            <button class="sidebar-btn" onclick="switchTab('landing',this)">🎨 Landing</button>
+            <button class="sidebar-btn" onclick="switchTab('notices',this)">📢 Notices</button>
+            <button class="sidebar-btn" onclick="switchTab('settings',this)">⚙️ Settings</button>
+            <button class="sidebar-btn" onclick="switchTab('backup',this)">🔄 Backup</button>
+            <button class="sidebar-btn" onclick="switchTab('migrate',this)">🚀 Migrate</button>
+            <button class="sidebar-btn" onclick="switchTab('server',this)">📊 Server</button>
+        </aside>
+
+        <div class="admin-content">
+            <!-- USERS TAB -->
+            <div class="admin-tab active" id="tab-users">
+                <div class="section-header">
+                    <h2>User Management</h2>
+                    <input type="text" class="form-input" id="user-search" placeholder="Search users..."
+                        style="max-width:250px;" oninput="filterUsers()">
+                </div>
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Plan</th>
+                                <th>Configs</th>
+                                <th>Data</th>
+                                <th>Speed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PREMADE TAB -->
+            <div class="admin-tab" id="tab-premade">
+                <div class="section-header">
+                    <h2>Premade Configs</h2>
+                    <button class="btn btn-primary btn-sm" onclick="openModal('add-premade-modal')">+ Add
+                        Premade</button>
+                </div>
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Protocol</th>
+                                <th>Security</th>
+                                <th>Data</th>
+                                <th>Duration</th>
+                                <th>Access</th>
+                                <th>Promo</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="premade-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PLANS TAB -->
+            <div class="admin-tab" id="tab-plans">
+                <div class="section-header">
+                    <h2>Plan Limits</h2>
+                    <button class="btn btn-primary btn-sm" onclick="savePlans()">Save All Changes</button>
+                </div>
+                <div
+                    style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1.5rem;margin-bottom:2rem;">
+                    <div class="card" style="padding:1.5rem;border-top:4px solid var(--success);">
+                        <h3><span class="plan-badge plan-free">FREE</span> Limits</h3>
+                        <div class="form-group"><label class="form-label">Max Configs</label><input type="number"
+                                class="form-input" id="pl-free-configs" value="2"></div>
+                        <div class="form-group"><label class="form-label">Max GB</label><input type="number"
+                                class="form-input" id="pl-free-gb" value="10"></div>
+                        <div class="form-group"><label class="form-label">Speed Limit (Mbps)</label><input type="number"
+                                class="form-input" id="pl-free-speed" value="0"></div>
+                    </div>
+                    <div class="card" style="padding:1.5rem;border-top:4px solid var(--accent);">
+                        <h3><span class="plan-badge plan-pro">PRO</span> Limits</h3>
+                        <div class="form-group"><label class="form-label">Max Configs</label><input type="number"
+                                class="form-input" id="pl-pro-configs" value="5"></div>
+                        <div class="form-group"><label class="form-label">Max GB</label><input type="number"
+                                class="form-input" id="pl-pro-gb" value="100"></div>
+                        <div class="form-group"><label class="form-label">Speed Limit (Mbps)</label><input type="number"
+                                class="form-input" id="pl-pro-speed" value="0"></div>
+                    </div>
+                    <div class="card" style="padding:1.5rem;border-top:4px solid var(--warning);">
+                        <h3><span class="plan-badge plan-enterprise">ENTERPRISE</span> Limits</h3>
+                        <div class="form-group"><label class="form-label">Max Configs</label><input type="number"
+                                class="form-input" id="pl-ent-configs" value="10"></div>
+                        <div class="form-group"><label class="form-label">Max GB</label><input type="number"
+                                class="form-input" id="pl-ent-gb" value="500"></div>
+                        <div class="form-group"><label class="form-label">Speed Limit (Mbps)</label><input type="number"
+                                class="form-input" id="pl-ent-speed" value="0"></div>
+                    </div>
+                </div>
+                <h2>Plan Visibility</h2>
+                <div class="card" style="padding:1.5rem;max-width:500px;">
+                    <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;"><input type="checkbox"
+                            id="plan-free" checked><label class="form-label" style="margin:0;"><span
+                                class="plan-badge plan-free">FREE</span> Show on landing page</label></div>
+                    <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;"><input type="checkbox"
+                            id="plan-pro" checked><label class="form-label" style="margin:0;"><span
+                                class="plan-badge plan-pro">PRO</span> Show on landing page</label></div>
+                    <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;"><input type="checkbox"
+                            id="plan-enterprise" checked><label class="form-label" style="margin:0;"><span
+                                class="plan-badge plan-enterprise">ENTERPRISE</span> Show on landing page</label></div>
+                </div>
+            </div>
+
+            <!-- LANDING PAGE PLANS TAB -->
+            <div class="admin-tab" id="tab-landing">
+                <div class="section-header">
+                    <h2>Landing Page Plans</h2>
+                    <div style="display:flex;gap:.5rem;">
+                        <button class="btn btn-secondary btn-sm" onclick="addLandingPlan()">+ Add Plan</button>
+                        <button class="btn btn-primary btn-sm" onclick="saveLandingPlans()">💾 Save</button>
+                    </div>
+                </div>
+                <p class="text-secondary" style="margin-bottom:1rem;">Edit the pricing cards shown on your landing page.
+                    Changes are live after saving.</p>
+                <div id="landing-plans-container"
+                    style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:1.25rem;"></div>
+            </div>
+
+            <!-- NOTICES TAB -->
+            <div class="admin-tab" id="tab-notices">
+                <div class="section-header">
+                    <h2>📢 Login Notices</h2>
+                    <button class="btn btn-primary btn-sm" onclick="openModal('add-notice-modal')">+ New Notice</button>
+                </div>
+                <p class="text-secondary" style="margin-bottom:1rem;">Active notices appear as popups when users login
+                    to their dashboard.</p>
+                <div id="notices-container"></div>
+            </div>
+
+            <!-- SETTINGS TAB -->
+            <div class="admin-tab" id="tab-settings">
+                <h2>Global Settings</h2>
+                <div class="card" style="padding:1.5rem;max-width:500px;">
+                    <div class="form-group"><label class="form-label">Default Max Configs (new users)</label><input
+                            type="number" class="form-input" id="s-maxconfigs" value="2"></div>
+                    <div class="form-group"><label class="form-label">Default Max GB (new users)</label><input
+                            type="number" class="form-input" id="s-maxgb" value="10"></div>
+                    <div class="form-group"><label class="form-label">Default Speed Limit (Mbps, 0 =
+                            unlimited)</label><input type="number" class="form-input" id="s-speedlimit" value="0"></div>
+                    <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;"><input type="checkbox"
+                            id="s-showlive" checked><label class="form-label" style="margin:0;">Show live user count on
+                            landing page</label></div>
+                    <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+                </div>
+            </div>
+
+            <!-- BACKUP TAB -->
+            <div class="admin-tab" id="tab-backup">
+                <h2>Backup Panel</h2>
+                <div class="card" style="padding:1.5rem;max-width:500px;">
+                    <div class="health-row" style="margin-bottom:1rem;">
+                        <span>Primary: <span class="health-dot" id="h-primary"></span></span>
+                        <span style="margin-left:1rem;">Backup: <span class="health-dot" id="h-backup"></span></span>
+                    </div>
+                    <div class="form-group"><label class="form-label">Backup Panel URL</label><input type="text"
+                            class="form-input" id="b-url" placeholder="https://backup-panel.com:5050/path"></div>
+                    <div class="form-group"><label class="form-label">Username</label><input type="text"
+                            class="form-input" id="b-user"></div>
+                    <div class="form-group"><label class="form-label">Password</label><input type="password"
+                            class="form-input" id="b-pass"></div>
+                    <div style="display:flex;gap:0.5rem;">
+                        <button class="btn btn-primary" onclick="saveBackup()">Save</button>
+                        <button class="btn btn-secondary" onclick="checkHealth()">Check Health</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MIGRATE TAB -->
+            <div class="admin-tab" id="tab-migrate">
+                <h2>🚀 Server Migration</h2>
+                <p class="text-secondary" style="margin-bottom:1.25rem;">Transfer all active configs to a new 3X-UI
+                    panel in one click.</p>
+                <div class="card" style="padding:1.5rem;max-width:550px;">
+                    <div
+                        style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-sm);padding:0.75rem;margin-bottom:1rem;font-size:0.85rem;color:var(--danger);">
+                        ⚠️ This will re-create all inbounds + clients on the target panel.
+                    </div>
+                    <div class="form-group"><label class="form-label">Target Panel URL</label><input type="text"
+                            class="form-input" id="m-url" placeholder="https://new-server.com:5050/path"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                        <div class="form-group"><label class="form-label">Username</label><input type="text"
+                                class="form-input" id="m-user"></div>
+                        <div class="form-group"><label class="form-label">Password</label><input type="password"
+                                class="form-input" id="m-pass"></div>
+                    </div>
+                    <button class="btn btn-danger" onclick="startMigration()" id="migrate-btn"
+                        style="width:100%;justify-content:center;">🚀 Start Migration</button>
+                    <div id="migration-result" style="margin-top:1rem;display:none;"></div>
+                </div>
+            </div>
+
+            <!-- SERVER STATS TAB -->
+            <div class="admin-tab" id="tab-server">
+                <div class="section-header">
+                    <h2>Server Stats</h2>
+                    <button class="btn btn-secondary btn-sm" onclick="loadServerStats()">🔄 Refresh</button>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="srv-cpu">—</div>
+                        <div class="stat-label">CPU</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="srv-mem">—</div>
+                        <div class="stat-label">Memory</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="srv-disk">—</div>
+                        <div class="stat-label">Disk</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="srv-uptime">—</div>
+                        <div class="stat-label">Uptime</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER DETAIL DRAWER -->
+    <div class="drawer-overlay" id="user-drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="drawer" id="user-drawer">
+        <div class="drawer-header">
+            <h3 id="drawer-title">User Details</h3>
+            <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+        </div>
+        <div id="drawer-body">
+            <div class="loading-state">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Premade Modal -->
+    <div class="modal" id="add-premade-modal">
+        <div class="modal-content" style="max-width:520px;">
+            <div class="modal-header">
+                <h3>Add Premade Config</h3><button class="modal-close"
+                    onclick="closeModal('add-premade-modal')">&times;</button>
+            </div>
+            <div class="form-group"><label class="form-label">Name</label><input type="text" class="form-input"
+                    id="pm-name" placeholder="Fast Reality Config"></div>
+            <div class="form-group"><label class="form-label">Description</label><input type="text" class="form-input"
+                    id="pm-desc" placeholder="Best for streaming"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                <div class="form-group"><label class="form-label">Protocol</label><select class="form-input"
+                        id="pm-protocol">
+                        <option value="vless">VLESS</option>
+                        <option value="vmess">VMess</option>
+                        <option value="trojan">Trojan</option>
+                    </select></div>
+                <div class="form-group"><label class="form-label">Security</label><select class="form-input"
+                        id="pm-security">
+                        <option value="reality">Reality</option>
+                        <option value="tls">TLS</option>
+                        <option value="none">None</option>
+                    </select></div>
+                <div class="form-group"><label class="form-label">Network</label><select class="form-input"
+                        id="pm-network">
+                        <option value="tcp">TCP</option>
+                        <option value="ws">WebSocket</option>
+                        <option value="grpc">gRPC</option>
+                    </select></div>
+                <div class="form-group"><label class="form-label">Port (0=random)</label><input type="number"
+                        class="form-input" id="pm-port" value="0"></div>
+                <div class="form-group"><label class="form-label">Data (GB)</label><input type="number"
+                        class="form-input" id="pm-gb" value="10"></div>
+                <div class="form-group"><label class="form-label">Duration (days)</label><input type="number"
+                        class="form-input" id="pm-days" value="30"></div>
+            </div>
+            <div class="form-group"><label class="form-label">SNI</label><input type="text" class="form-input"
+                    id="pm-sni" placeholder="microsoft365.com"></div>
+            <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;">
+                <input type="checkbox" id="pm-paid"><label class="form-label" style="margin:0;">Paid plan only
+                    (Pro/Enterprise)</label>
+            </div>
+            <div class="form-group"><label class="form-label">Config Type</label>
+                <select class="form-input" id="pm-type">
+                    <option value="normal">Normal (deducts from data allowance)</option>
+                    <option value="promotional">🎁 Promotional (no data deduction)</option>
+                    <option value="deduct">📊 Deduct from Usage (deducts from data)</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem;"
+                onclick="savePremade()">Create Premade Config</button>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal" id="edit-user-modal">
+        <div class="modal-content" style="max-width:450px;">
+            <div class="modal-header">
+                <h3>Edit User</h3><button class="modal-close" onclick="closeModal('edit-user-modal')">&times;</button>
+            </div>
+            <input type="hidden" id="eu-id">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                <div class="form-group"><label class="form-label">Plan</label><select class="form-input" id="eu-plan">
+                        <option value="FREE">Free</option>
+                        <option value="PRO">Pro</option>
+                        <option value="ENTERPRISE">Enterprise</option>
+                    </select></div>
+                <div class="form-group"><label class="form-label">Max Configs</label><input type="number"
+                        class="form-input" id="eu-maxconfigs"></div>
+                <div class="form-group"><label class="form-label">Max GB</label><input type="number" class="form-input"
+                        id="eu-maxgb"></div>
+                <div class="form-group"><label class="form-label">Speed (Mbps)</label><input type="number"
+                        class="form-input" id="eu-speed" placeholder="0 = unlimited"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Plan Expiry</label><input type="date" class="form-input"
+                    id="eu-expiry"></div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem;"
+                onclick="saveUser()">Save Changes</button>
+        </div>
+    </div>
+
+    <!-- Add Notice Modal -->
+    <div class="modal" id="add-notice-modal">
+        <div class="modal-content" style="max-width:500px;">
+            <div class="modal-header">
+                <h3>Create Notice</h3><button class="modal-close"
+                    onclick="closeModal('add-notice-modal')">&times;</button>
+            </div>
+            <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input"
+                    id="notice-title" placeholder="System Maintenance"></div>
+            <div class="form-group"><label class="form-label">Message</label><textarea class="form-input"
+                    id="notice-message" rows="3" placeholder="We will be performing maintenance..."></textarea></div>
+            <div class="form-group"><label class="form-label">Type</label>
+                <select class="form-input" id="notice-type">
+                    <option value="info">ℹ️ Info</option>
+                    <option value="warning">⚠️ Warning</option>
+                    <option value="success">✅ Success</option>
+                    <option value="danger">🚨 Danger</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="createNotice()">Create
+                Notice</button>
+        </div>
+    </div>
+
+    <!-- Admin Add Config Modal -->
+    <div class="modal" id="admin-add-config-modal">
+        <div class="modal-content" style="max-width:520px;">
+            <div class="modal-header">
+                <h3>Add Config to User</h3><button class="modal-close"
+                    onclick="closeModal('admin-add-config-modal')">&times;</button>
+            </div>
+            <input type="hidden" id="aac-userid">
+            <div class="form-group"><label class="form-label">Config Name</label><input type="text" class="form-input"
+                    id="aac-name" placeholder="My VPN Config"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                <div class="form-group"><label class="form-label">Protocol</label>
+                    <select class="form-input" id="aac-protocol">
+                        <option value="vless">VLESS</option>
+                        <option value="vmess">VMess</option>
+                        <option value="trojan">Trojan</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Security</label>
+                    <select class="form-input" id="aac-security">
+                        <option value="reality">Reality</option>
+                        <option value="tls">TLS</option>
+                        <option value="none">None</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Network</label>
+                    <select class="form-input" id="aac-network">
+                        <option value="tcp">TCP</option>
+                        <option value="ws">WebSocket</option>
+                        <option value="grpc">gRPC</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Port (0=random)</label><input type="number"
+                        class="form-input" id="aac-port" value="0"></div>
+            </div>
+            <div class="form-group"><label class="form-label">SNI</label><input type="text" class="form-input"
+                    id="aac-sni" placeholder="microsoft365.com"></div>
+            <div class="form-group"><label class="form-label">Fingerprint</label>
+                <select class="form-input" id="aac-fingerprint">
+                    <option value="chrome">Chrome</option>
+                    <option value="firefox">Firefox</option>
+                    <option value="safari">Safari</option>
+                    <option value="random">Random</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="adminAddConfig()">⚡
+                Create</button>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        // Tab switching
+        function switchTab(name, btn) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${name}`).classList.add('active');
+            if (btn) btn.classList.add('active');
+            const loaders = { users: loadUsers, premade: loadAdminPremades, plans: loadPlanVisibility, settings: loadSettings, backup: checkHealth, server: loadServerStats, notices: loadNotices, landing: loadLandingPlans };
+            if (loaders[name]) loaders[name]();
+        }
+
+        // ════════════════════════ USERS ════════════════════════
+        let allUsers = [];
+        async function loadUsers() {
+            try {
+                const data = await api.get('/admin/users');
+                allUsers = data.users;
+                renderUsers(allUsers);
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        function renderUsers(users) {
+            document.getElementById('users-body').innerHTML = users.map(u => `
+                <tr style="cursor:pointer;" onclick="openUserDrawer('${u.id}','${u.name.replace(/'/g, "\\'")}')">
+                    <td><strong>${u.name}</strong></td>
+                    <td>${u.email}</td>
+                    <td><span class="plan-badge plan-${(u.plan || 'FREE').toLowerCase()}">${u.plan || 'FREE'}</span></td>
+                    <td>${u.currentConfigs}/${u.maxConfigs}</td>
+                    <td>${u.currentgb}/${u.allowedmaxgb} GB</td>
+                    <td>${u.speedLimit ? u.speedLimit + ' Mbps' : 'Unlimited'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function filterUsers() {
+            const q = document.getElementById('user-search').value.toLowerCase();
+            renderUsers(allUsers.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)));
+        }
+
+        // ════════════════════════ USER DRAWER ════════════════════════
+        let currentDrawerUserId = null;
+        let drawerRefreshInterval = null;
+
+        function openUserDrawer(userId, userName) {
+            currentDrawerUserId = userId;
+            document.getElementById('drawer-title').textContent = userName;
+            document.getElementById('drawer-body').innerHTML = '<div class="loading-state"><div class="spinner"></div></div>';
+            document.getElementById('user-drawer-overlay').classList.add('active');
+            document.getElementById('user-drawer').classList.add('active');
+            loadDrawerData(userId);
+            if (drawerRefreshInterval) clearInterval(drawerRefreshInterval);
+            drawerRefreshInterval = setInterval(() => loadDrawerData(userId), 3000);
+        }
+
+        function closeDrawer() {
+            document.getElementById('user-drawer-overlay').classList.remove('active');
+            document.getElementById('user-drawer').classList.remove('active');
+            currentDrawerUserId = null;
+            if (drawerRefreshInterval) { clearInterval(drawerRefreshInterval); drawerRefreshInterval = null; }
+        }
+
+        async function loadDrawerData(userId) {
+            try {
+                const data = await api.get(`/admin/users/${userId}`);
+                renderDrawer(data);
+            } catch (e) {
+                document.getElementById('drawer-body').innerHTML = `<p style="color:var(--danger);">Error: ${e.message}</p>`;
+            }
+        }
+
+        function renderDrawer(user) {
+            const joinDate = new Date(user.createdAt).toLocaleDateString();
+            const totalUsage = user.configs.reduce((s, c) => s + parseFloat(c.totalUsageGB || 0), 0).toFixed(2);
+            const onlineCount = user.configs.filter(c => c.isOnline).length;
+
+            let html = `
+            <div class="user-info-grid">
+                <div class="info-item"><div class="info-label">Email</div><div class="info-value">${user.email}</div></div>
+                <div class="info-item"><div class="info-label">Plan</div><div class="info-value"><span class="plan-badge plan-${(user.plan || 'FREE').toLowerCase()}">${user.plan || 'FREE'}</span></div></div>
+                <div class="info-item"><div class="info-label">Data Used</div><div class="info-value">${totalUsage} / ${user.allowedmaxgb} GB</div></div>
+                <div class="info-item"><div class="info-label">Configs</div><div class="info-value">${user.currentConfigs} / ${user.maxConfigs}</div></div>
+                <div class="info-item"><div class="info-label">Speed Limit</div><div class="info-value inline-edit">
+                    <input type="number" class="form-input" id="drawer-speed" value="${user.speedLimit || 0}" style="width:70px;padding:.4rem .6rem;">
+                    <button class="btn btn-sm btn-secondary" onclick="updateDrawerSpeed('${user.id}')">Set</button>
+                </div></div>
+                <div class="info-item"><div class="info-label">Online</div><div class="info-value"><span class="live-dot"></span> ${onlineCount} config${onlineCount !== 1 ? 's' : ''}</div></div>
+                <div class="info-item"><div class="info-label">Joined</div><div class="info-value">${joinDate}</div></div>
+                <div class="info-item"><div class="info-label">Actions</div><div class="info-value">
+                    <button class="btn btn-sm btn-secondary" onclick="openEditUser('${user.id}','${user.plan || 'FREE'}',${user.maxConfigs},${user.allowedmaxgb},${user.speedLimit || 0},'${user.planExpiry || ''}')">✏️ Edit</button>
+                </div></div>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+                <h4>Configurations (${user.configs.length})</h4>
+                <button class="btn btn-sm btn-primary" onclick="openAdminAddConfig('${user.id}')">+ Add Config</button>
+            </div>`;
+
+            if (!user.configs.length) {
+                html += '<div class="empty-state" style="padding:1.5rem;"><p>No configs yet.</p></div>';
+            } else {
+                user.configs.forEach((c, i) => {
+                    html += `
+                    <div class="drawer-config-card">
+                        <div class="drawer-config-header">
+                            <div>
+                                <div class="drawer-config-name">${c.name}</div>
+                                <div class="drawer-config-meta">${c.protocol.toUpperCase()} · ${c.security} · Port ${c.port}</div>
+                            </div>
+                            <span class="status-badge ${c.isOnline ? 'online' : (c.enabled ? 'offline' : 'disabled')}">${c.isOnline ? '● Online' : (c.enabled ? '○ Offline' : '⊘ Disabled')}</span>
+                        </div>
+                        <div class="drawer-config-stats">
+                            <div><span class="stat-sm-label">↑</span> ${formatBytes(c.traffic.up)}</div>
+                            <div><span class="stat-sm-label">↓</span> ${formatBytes(c.traffic.down)}</div>
+                            <div><span class="stat-sm-label">Total</span> ${c.totalUsageGB} GB</div>
+                        </div>
+                        ${c.connectedIps && c.connectedIps.length ? `<div class="ip-list" style="margin-bottom:.5rem;">${c.connectedIps.map(ip => `<span class="ip-tag">${ip}</span>`).join('')}</div>` : ''}
+                        <div class="drawer-config-actions">
+                            <button class="btn btn-sm btn-primary" onclick="copyToClipboard('${c.v2rayUrl.replace(/'/g, "\\'")}')">📋 Copy</button>
+                            <button class="btn btn-sm btn-secondary" onclick="adminToggleConfig('${c.id}')">${c.enabled ? '⏸ Disable' : '▶ Enable'}</button>
+                            <button class="btn btn-sm btn-danger" onclick="adminDeleteConfig('${c.id}','${c.name.replace(/'/g, "\\'")}')">🗑️</button>
+                        </div>
+                    </div>`;
+                });
+            }
+            document.getElementById('drawer-body').innerHTML = html;
+        }
+
+        async function updateDrawerSpeed(userId) {
+            const speed = parseInt(document.getElementById('drawer-speed').value) || 0;
+            try {
+                await api.put(`/settings/user/${userId}/speed`, { speedLimit: speed });
+                showToast('Speed limit updated');
+                loadUsers();
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function adminToggleConfig(configId) {
+            try {
+                await api.put(`/admin/config/${configId}/toggle`);
+                showToast('Config toggled');
+                if (currentDrawerUserId) loadDrawerData(currentDrawerUserId);
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function adminDeleteConfig(configId, name) {
+            if (!confirm(`Delete config "${name}"?`)) return;
+            try {
+                await api.delete(`/admin/config/${configId}`);
+                showToast('Config deleted');
+                if (currentDrawerUserId) loadDrawerData(currentDrawerUserId);
+                loadUsers();
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        function openAdminAddConfig(userId) {
+            document.getElementById('aac-userid').value = userId;
+            document.getElementById('aac-name').value = '';
+            openModal('admin-add-config-modal');
+        }
+
+        async function adminAddConfig() {
+            try {
+                await api.post('/admin/config/add', {
+                    userId: document.getElementById('aac-userid').value,
+                    name: document.getElementById('aac-name').value,
+                    protocol: document.getElementById('aac-protocol').value,
+                    security: document.getElementById('aac-security').value,
+                    network: document.getElementById('aac-network').value,
+                    port: parseInt(document.getElementById('aac-port').value) || 0,
+                    sni: document.getElementById('aac-sni').value || undefined,
+                    fingerprint: document.getElementById('aac-fingerprint').value,
+                });
+                showToast('Config added');
+                closeModal('admin-add-config-modal');
+                if (currentDrawerUserId) loadDrawerData(currentDrawerUserId);
+                loadUsers();
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        // ════════════════════════ EDIT USER ════════════════════════
+        function openEditUser(id, plan, maxConfigs, maxgb, speed, expiry) {
+            document.getElementById('eu-id').value = id;
+            document.getElementById('eu-plan').value = plan;
+            document.getElementById('eu-maxconfigs').value = maxConfigs;
+            document.getElementById('eu-maxgb').value = maxgb;
+            document.getElementById('eu-speed').value = speed;
+            document.getElementById('eu-expiry').value = expiry ? expiry.split('T')[0] : '';
+            openModal('edit-user-modal');
+        }
+
+        async function saveUser() {
+            try {
+                await api.put(`/settings/user/${document.getElementById('eu-id').value}/plan`, {
+                    plan: document.getElementById('eu-plan').value,
+                    maxConfigs: parseInt(document.getElementById('eu-maxconfigs').value),
+                    allowedmaxgb: parseInt(document.getElementById('eu-maxgb').value),
+                    speedLimit: parseInt(document.getElementById('eu-speed').value) || 0,
+                    planExpiry: document.getElementById('eu-expiry').value || undefined,
+                });
+                showToast('User updated');
+                closeModal('edit-user-modal');
+                loadUsers();
+                if (currentDrawerUserId) loadDrawerData(currentDrawerUserId);
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        // ════════════════════════ PREMADE ════════════════════════
+        async function loadAdminPremades() {
+            try {
+                const data = await api.get('/premade/admin/list');
+                document.getElementById('premade-body').innerHTML = data.premades.map(p => `
+                    <tr>
+                        <td><strong>${p.name}</strong></td>
+                        <td>${p.protocol.toUpperCase()}</td>
+                        <td>${p.security}</td>
+                        <td>${p.dataGB} GB</td>
+                        <td>${p.durationDays}d</td>
+                        <td>${p.paidOnly ? '<span class="plan-badge plan-pro">Paid</span>' : '<span class="plan-badge plan-free">All</span>'}</td>
+                        <td>${p.promotional ? '<span class="notice-type notice-type-success">Promo</span>' : '—'}</td>
+                        <td>${p.enabled ? '<span class="status-badge online">Active</span>' : '<span class="status-badge disabled">Disabled</span>'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="togglePremade('${p.id}',${!p.enabled})">${p.enabled ? 'Disable' : 'Enable'}</button>
+                            <button class="btn btn-sm btn-danger" onclick="deletePremade('${p.id}')">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function savePremade() {
+            const pmType = document.getElementById('pm-type').value;
+            try {
+                await api.post('/premade/admin/create', {
+                    name: document.getElementById('pm-name').value,
+                    description: document.getElementById('pm-desc').value,
+                    protocol: document.getElementById('pm-protocol').value,
+                    security: document.getElementById('pm-security').value,
+                    network: document.getElementById('pm-network').value,
+                    port: parseInt(document.getElementById('pm-port').value) || 0,
+                    dataGB: parseInt(document.getElementById('pm-gb').value) || 10,
+                    durationDays: parseInt(document.getElementById('pm-days').value) || 30,
+                    sni: document.getElementById('pm-sni').value || null,
+                    paidOnly: document.getElementById('pm-paid').checked,
+                    promotional: pmType === 'promotional',
+                });
+                showToast('Premade config created');
+                closeModal('add-premade-modal');
+                loadAdminPremades();
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function togglePremade(id, enabled) {
+            try { await api.put(`/premade/admin/${id}`, { enabled }); loadAdminPremades(); } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function deletePremade(id) {
+            if (!confirm('Delete this premade config?')) return;
+            try { await api.delete(`/premade/admin/${id}`); showToast('Deleted'); loadAdminPremades(); } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        // ════════════════════════ PLANS ════════════════════════
+        async function loadPlanVisibility() {
+            try {
+                const visData = await api.get('/settings/disabled-plans');
+                const disabled = visData.disabledPlans || [];
+                document.getElementById('plan-free').checked = !disabled.includes('FREE');
+                document.getElementById('plan-pro').checked = !disabled.includes('PRO');
+                document.getElementById('plan-enterprise').checked = !disabled.includes('ENTERPRISE');
+                const planData = await api.get('/settings/plans');
+                const p = planData.plans || {};
+                if (!p.FREE) p.FREE = { maxConfigs: 2, maxGB: 10, speedLimit: 0 };
+                if (!p.PRO) p.PRO = { maxConfigs: 5, maxGB: 100, speedLimit: 0 };
+                if (!p.ENTERPRISE) p.ENTERPRISE = { maxConfigs: 10, maxGB: 500, speedLimit: 0 };
+                document.getElementById('pl-free-configs').value = p.FREE.maxConfigs;
+                document.getElementById('pl-free-gb').value = p.FREE.maxGB;
+                document.getElementById('pl-free-speed').value = p.FREE.speedLimit;
+                document.getElementById('pl-pro-configs').value = p.PRO.maxConfigs;
+                document.getElementById('pl-pro-gb').value = p.PRO.maxGB;
+                document.getElementById('pl-pro-speed').value = p.PRO.speedLimit;
+                document.getElementById('pl-ent-configs').value = p.ENTERPRISE.maxConfigs;
+                document.getElementById('pl-ent-gb').value = p.ENTERPRISE.maxGB;
+                document.getElementById('pl-ent-speed').value = p.ENTERPRISE.speedLimit;
+            } catch (e) { console.error(e); }
+        }
+
+        async function savePlans() {
+            const disabled = [];
+            if (!document.getElementById('plan-free').checked) disabled.push('FREE');
+            if (!document.getElementById('plan-pro').checked) disabled.push('PRO');
+            if (!document.getElementById('plan-enterprise').checked) disabled.push('ENTERPRISE');
+            const plans = {
+                FREE: { maxConfigs: parseInt(document.getElementById('pl-free-configs').value), maxGB: parseInt(document.getElementById('pl-free-gb').value), speedLimit: parseInt(document.getElementById('pl-free-speed').value) },
+                PRO: { maxConfigs: parseInt(document.getElementById('pl-pro-configs').value), maxGB: parseInt(document.getElementById('pl-pro-gb').value), speedLimit: parseInt(document.getElementById('pl-pro-speed').value) },
+                ENTERPRISE: { maxConfigs: parseInt(document.getElementById('pl-ent-configs').value), maxGB: parseInt(document.getElementById('pl-ent-gb').value), speedLimit: parseInt(document.getElementById('pl-ent-speed').value) }
+            };
+            try {
+                await Promise.all([api.put('/settings/disabled-plans', { disabledPlans: disabled }), api.put('/settings/plans', { plans })]);
+                showToast('Plans updated successfully');
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        // ════════════════════════ LANDING PAGE PLANS ════════════════════════
+        let landingPlansData = [];
+
+        async function loadLandingPlans() {
+            try {
+                const data = await api.get('/settings/landing-plans');
+                landingPlansData = data.plans || [];
+                renderLandingPlans();
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        function renderLandingPlans() {
+            const container = document.getElementById('landing-plans-container');
+            container.innerHTML = landingPlansData.map((p, i) => `
+                <div class="lp-card">
+                    <button class="lp-remove" onclick="removeLandingPlan(${i})">&times;</button>
+                    <div class="form-group"><label class="form-label">Plan Name</label><input type="text" class="form-input" value="${p.name || ''}" onchange="landingPlansData[${i}].name=this.value"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+                        <div class="form-group"><label class="form-label">Price (USD)</label><input type="number" class="form-input" value="${p.price || 0}" onchange="landingPlansData[${i}].price=parseFloat(this.value)"></div>
+                        <div class="form-group"><label class="form-label">Period</label><input type="text" class="form-input" value="${p.period || 'month'}" onchange="landingPlansData[${i}].period=this.value"></div>
+                    </div>
+                    <div class="form-group"><label class="form-label">Features (one per line)</label><textarea class="form-input" rows="4" onchange="landingPlansData[${i}].features=this.value.split('\\n').filter(f=>f.trim())">${(p.features || []).join('\n')}</textarea></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+                        <div class="form-group"><label class="form-label">CTA Text</label><input type="text" class="form-input" value="${p.cta || ''}" onchange="landingPlansData[${i}].cta=this.value"></div>
+                        <div class="form-group"><label class="form-label">CTA Link</label><input type="text" class="form-input" value="${p.link || '/signup'}" onchange="landingPlansData[${i}].link=this.value"></div>
+                    </div>
+                    <div class="form-group" style="display:flex;align-items:center;gap:.75rem;">
+                        <input type="checkbox" ${p.popular ? 'checked' : ''} onchange="landingPlansData[${i}].popular=this.checked">
+                        <label class="form-label" style="margin:0;">⭐ Popular (highlighted card)</label>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addLandingPlan() {
+            landingPlansData.push({ id: 'PLAN_' + Date.now(), name: 'New Plan', price: 0, period: 'month', popular: false, features: ['Feature 1'], cta: 'Get Started', ctaClass: 'btn-secondary', link: '/signup' });
+            renderLandingPlans();
+        }
+
+        function removeLandingPlan(index) {
+            if (!confirm('Remove this plan?')) return;
+            landingPlansData.splice(index, 1);
+            renderLandingPlans();
+        }
+
+        async function saveLandingPlans() {
+            try {
+                await api.put('/settings/landing-plans', { plans: landingPlansData });
+                showToast('Landing page plans saved');
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        // ════════════════════════ NOTICES ════════════════════════
+        async function loadNotices() {
+            try {
+                const data = await api.get('/api/notices');
+                const notices = data.notices || [];
+                const container = document.getElementById('notices-container');
+                if (!notices.length) {
+                    container.innerHTML = '<div class="empty-state"><p>No notices. Create one to display a popup on user login.</p></div>';
+                    return;
+                }
+                container.innerHTML = notices.map(n => `
+                    <div class="notice-card">
+                        <div class="notice-body">
+                            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem;">
+                                <span class="notice-type notice-type-${n.type}">${n.type}</span>
+                                ${n.enabled ? '<span class="status-badge online">Active</span>' : '<span class="status-badge disabled">Disabled</span>'}
+                            </div>
+                            <strong>${n.title}</strong>
+                            <p style="color:var(--text-secondary);font-size:.85rem;margin-top:.25rem;">${n.message}</p>
+                        </div>
+                        <div style="display:flex;gap:.3rem;flex-shrink:0;">
+                            <button class="btn btn-sm btn-secondary" onclick="toggleNotice('${n.id}',${!n.enabled})">${n.enabled ? 'Disable' : 'Enable'}</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteNotice('${n.id}')">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function createNotice() {
+            try {
+                await api.post('/api/notices', {
+                    title: document.getElementById('notice-title').value,
+                    message: document.getElementById('notice-message').value,
+                    type: document.getElementById('notice-type').value,
+                });
+                showToast('Notice created');
+                closeModal('add-notice-modal');
+                loadNotices();
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function toggleNotice(id, enabled) {
+            try { await api.put(`/api/notices/${id}`, { enabled }); loadNotices(); } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function deleteNotice(id) {
+            if (!confirm('Delete this notice?')) return;
+            try { await api.delete(`/api/notices/${id}`); showToast('Notice deleted'); loadNotices(); } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        // ════════════════════════ SETTINGS ════════════════════════
+        async function loadSettings() {
+            try {
+                const data = await api.get('/settings/');
+                const s = data.settings;
+                document.getElementById('s-maxconfigs').value = s.defaultMaxConfigs;
+                document.getElementById('s-maxgb').value = s.defaultMaxGB;
+                document.getElementById('s-speedlimit').value = s.defaultSpeedLimit;
+                document.getElementById('s-showlive').checked = s.showLiveUsers;
+            } catch (e) { }
+        }
+
+        async function saveSettings() {
+            try {
+                await api.put('/settings/', {
+                    defaultMaxConfigs: parseInt(document.getElementById('s-maxconfigs').value),
+                    defaultMaxGB: parseInt(document.getElementById('s-maxgb').value),
+                    defaultSpeedLimit: parseInt(document.getElementById('s-speedlimit').value) || 0,
+                    showLiveUsers: document.getElementById('s-showlive').checked,
+                });
+                showToast('Settings saved');
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        // ════════════════════════ BACKUP ════════════════════════
+        async function checkHealth() {
+            try {
+                const data = await api.get('/settings/health');
+                document.getElementById('h-primary').className = `health-dot ${data.primary.online ? 'online' : 'offline'}`;
+                document.getElementById('h-backup').className = `health-dot ${data.backup.online ? 'online' : 'offline'}`;
+            } catch (e) { }
+        }
+
+        async function saveBackup() {
+            try {
+                await api.put('/settings/backup', {
+                    backupPanelUrl: document.getElementById('b-url').value,
+                    backupPanelUser: document.getElementById('b-user').value,
+                    backupPanelPass: document.getElementById('b-pass').value,
+                });
+                showToast('Backup panel saved');
+                checkHealth();
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        // ════════════════════════ MIGRATION ════════════════════════
+        async function startMigration() {
+            const url = document.getElementById('m-url').value;
+            const user = document.getElementById('m-user').value;
+            const pass = document.getElementById('m-pass').value;
+            if (!url || !user || !pass) return showToast('Fill all migration fields', 'error');
+            if (!confirm('⚠️ Are you sure? This will migrate ALL active configs to the target panel.')) return;
+            const btn = document.getElementById('migrate-btn');
+            const result = document.getElementById('migration-result');
+            btn.disabled = true; btn.textContent = '⏳ Migrating...';
+            result.style.display = 'block'; result.innerHTML = '<div class="spinner"></div>';
+            try {
+                const data = await api.post('/settings/migrate', { targetPanelUrl: url, targetUsername: user, targetPassword: pass });
+                result.innerHTML = `<div style="padding:1rem;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:var(--radius-sm);"><strong style="color:var(--success);">✅ Migration Complete</strong><br><span style="font-size:0.85rem;color:var(--text-secondary);">Migrated: ${data.migrated}/${data.total} | Failed: ${data.failed}${data.errors?.length ? '<br>Errors:<br>' + data.errors.map(e => '• ' + e).join('<br>') : ''}</span></div>`;
+            } catch (e) {
+                result.innerHTML = `<div style="padding:1rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-sm);color:var(--danger);">❌ ${e.message}</div>`;
+            } finally { btn.disabled = false; btn.textContent = '🚀 Start Migration'; }
+        }
+
+        // ════════════════════════ SERVER STATS ════════════════════════
+        async function loadServerStats() {
+            try {
+                const data = await api.get('/settings/server-stats');
+                const obj = data.obj || data;
+                document.getElementById('srv-cpu').textContent = (obj.cpu || 0).toFixed(1) + '%';
+                document.getElementById('srv-mem').textContent = formatBytes(obj.mem?.current || 0) + ' / ' + formatBytes(obj.mem?.total || 0);
+                document.getElementById('srv-disk').textContent = formatBytes(obj.disk?.current || 0) + ' / ' + formatBytes(obj.disk?.total || 0);
+                const upSec = obj.uptime || 0;
+                document.getElementById('srv-uptime').textContent = `${Math.floor(upSec / 86400)}d ${Math.floor((upSec % 86400) / 3600)}h`;
+            } catch (e) { showToast('Could not load server stats', 'error'); }
+        }
+
+        // Init
+        loadUsers();
+    </script>
+</body>
+
+</html>
